@@ -43,6 +43,9 @@ jobs:
       # json report can't be installed on Py2, and make macos super slow.
       run: |
         python -m pytest -v --cov=pyflyby --cov-report=xml --doctest-modules --maxfail=3 lib tests
+    - name: Debugging with tmate
+      uses: mxschmitt/action-tmate@v3.16
+
     - name: pytest (not MacOS)
       if: ${{ matrix.os != 'macos-latest'  }}
       run: |
