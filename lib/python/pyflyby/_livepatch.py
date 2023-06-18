@@ -133,6 +133,7 @@ XXX test
 
 import ast
 import os
+import platform
 import re
 import six
 import sys
@@ -146,7 +147,7 @@ from   pyflyby._log             import logger
 
 
 # Keep track of when the process was started.
-if os.uname()[0] == 'Linux':
+if platform.system() == 'Linux':
     _PROCESS_START_TIME = os.stat("/proc/%d"%os.getpid()).st_ctime
 else:
     try:
