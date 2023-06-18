@@ -1055,52 +1055,112 @@ def inject(pid, statements, wait=True, show_gdb_output=False):
     else:
         return process.pid
 
-import tty
+
+if sys.platform == 'win32':
+    import msvcrt
+
+    def setraw_but_sigint():
+        """Put terminal into a raw mode (Windows)."""
+        msvcrt.setmode(sys.stdin.fileno(), os.O_BINARY)
+
+        mode = msvcrt.get_osfhandle(sys.stdin.fileno()).GetConsoleMode()
+        mode &= ~0x00000010  # Disable line input
+        mode &= ~0x00000020  # Disable echo input
+        msvcrt.get_osfhandle(sys.stdin.fileno()).SetConsoleMode(mode)
+
+else:
+    import tty
+
+    def setraw_but_sigint():
+        """Put terminal into a raw mode (Unix-like systems)."""
+        fd = sys.stdin.fileno()
+        mode = tty.tcgetattr(fd)
+        mode[tty.IFLAG] = mode[tty.IFLAG] & ~(
+                tty.BRKINT | tty.ICRNL | tty.INPCK | tty.ISTRIP | tty.IXON
+        )
+        mode[tty.OFLAG] = mode[tty.OFLAG] & ~(tty.OPOST)
+        mode[tty.CFLAG] = mode[tty.CFLAG] & ~(tty.CSIZE | tty.PARENB)
+        mode[tty.CFLAG] = mode[tty.CFLAG] | tty.CS8
+        mode[tty.LFLAG] = mode[tty.LFLAG] & ~(
+                tty.ECHO | tty.ICANON | tty.IEXTEN
+        )  # NOT ISIG HERE.
+        mode[tty.CC][tty.VMIN] = 1
+        mode[tty.CC][tty.VTIME] = 0
+        tty.tcsetattr(fd, tty.TCSAFLUSH, mode)
 
 
-# Copy of tty.setraw that does not set ISIG,
-# in order to keep CTRL-C sending Keybord Interrupt.
-def setraw_but_sigint(fd, when=tty.TCSAFLUSH):
-    """Put terminal into a raw mode."""
-    mode = tty.tcgetattr(fd)
-    mode[tty.IFLAG] = mode[tty.IFLAG] & ~(
-        tty.BRKINT | tty.ICRNL | tty.INPCK | tty.ISTRIP | tty.IXON
-    )
-    mode[tty.OFLAG] = mode[tty.OFLAG] & ~(tty.OPOST)
-    mode[tty.CFLAG] = mode[tty.CFLAG] & ~(tty.CSIZE | tty.PARENB)
-    mode[tty.CFLAG] = mode[tty.CFLAG] | tty.CS8
-    mode[tty.LFLAG] = mode[tty.LFLAG] & ~(
-        tty.ECHO | tty.ICANON | tty.IEXTEN
-    )  # NOT ISIG HERE.
-    mode[tty.CC][tty.VMIN] = 1
-    mode[tty.CC][tty.VTIME] = 0
-    tty.tcsetattr(fd, when, mode)
 
+import os
+import sys
 
 class Pty(object):
     def __init__(self):
-        import pty
-        self.master_fd, self.slave_fd = pty.openpty()
-        self.ttyname = os.ttyname(self.slave_fd)
+        if sys.platform == 'win32':
+            self.master_fd, self.slave_fd = self._winpty_openpty()
+            self.ttyname = 'pty'
+        else:
+            import pty
+            self.master_fd, self.slave_fd = pty.openpty()
+            self.ttyname = os.ttyname(self.slave_fd)
+
+    def _winpty_openpty(self):
+        import msvcrt
+        master_fd = msvcrt.open_osfhandle(0, os.O_RDWR)
+        slave_fd = msvcrt.open_osfhandle(0, os.O_RDWR)
+        return master_fd, slave_fd
+
+    def _setraw_but_sigint_unix(self):
+        import tty
+        import termios
+        fd = sys.stdin.fileno()
+        mode = termios.tcgetattr(fd)
+        mode[tty.IFLAG] = mode[tty.IFLAG] & ~(
+                tty.BRKINT | tty.ICRNL | tty.INPCK | tty.ISTRIP | tty.IXON
+        )
+        mode[tty.OFLAG] = mode[tty.OFLAG] & ~(tty.OPOST)
+        mode[tty.CFLAG] = mode[tty.CFLAG] & ~(tty.CSIZE | tty.PARENB)
+        mode[tty.CFLAG] = mode[tty.CFLAG] | tty.CS8
+        mode[tty.LFLAG] = mode[tty.LFLAG] & ~(
+                tty.ECHO | tty.ICANON | tty.IEXTEN
+        )  # NOT ISIG HERE.
+        mode[tty.CC][tty.VMIN] = 1
+        mode[tty.CC][tty.VTIME] = 0
+        termios.tcsetattr(fd, termios.TCSAFLUSH, mode)
+
+    def _setraw_but_sigint_windows(self):
+        import msvcrt
+        msvcrt.setmode(sys.stdin.fileno(), os.O_BINARY)
+
+        mode = msvcrt.get_osfhandle(sys.stdin.fileno()).GetConsoleMode()
+        mode &= ~0x00000010  # Disable line input
+        mode &= ~0x00000020  # Disable echo input
+        msvcrt.get_osfhandle(sys.stdin.fileno()).SetConsoleMode(mode)
+
+    def _setraw_but_sigint(self):
+        if sys.platform == 'win32':
+            self._setraw_but_sigint_windows()
+        else:
+            self._setraw_but_sigint_unix()
 
     def communicate(self):
-        import tty
-        import pty
         try:
-            mode = tty.tcgetattr(pty.STDIN_FILENO)
-            setraw_but_sigint(pty.STDIN_FILENO)
+            self._setraw_but_sigint()
             restore = True
-        except tty.error:
+        except (ImportError, OSError):
             restore = False
         try:
-            pty._copy(self.master_fd)
+            self._copy()
         except KeyboardInterrupt:
-            print('^C\r') # we need the \r because we are still in raw mode
+            print('^C\r')  # we need the \r because we are still in raw mode
         finally:
             if restore:
-                tty.tcsetattr(pty.STDIN_FILENO, tty.TCSAFLUSH, mode)
+                if sys.platform == 'win32':
+                    import msvcrt
+                    mode = msvcrt.get_osfhandle(sys.stdin.fileno()).GetConsoleMode()
+                    msvcrt.get_osfhandle(sys.stdin.fileno()).SetConsoleMode(mode | 0x00000010)
+                else:
+                    self._setraw_but_sigint_unix()
         os.close(self.master_fd)
-
 
 def process_exists(pid):
     """
