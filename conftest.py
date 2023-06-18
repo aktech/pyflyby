@@ -111,7 +111,7 @@ else:
     import pyflyby
 
     fn = re.sub("[.]py[co]$", ".py", pyflyby.__file__)
-    expected_fn = os.path.join(PYFLYBY_HOME, "lib/python/pyflyby/__init__.py")
+    expected_fn = os.path.join(PYFLYBY_HOME, "lib", "python", "pyflyby", "__init__.py")
     assert fn == expected_fn, "pyflyby got loaded from %s; expected %s" % (fn, expected_fn)
 
 
