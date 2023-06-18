@@ -1,14 +1,11 @@
 # pyflyby/_dbg.py.
 # Copyright (C) 2009, 2010, 2011, 2012, 2013, 2014, 2015, 2018 Karl Chen.
 # License: MIT http://opensource.org/licenses/MIT
-
-
-
+import getpass
 from   contextlib               import contextmanager
 import errno
 from   functools                import wraps
 import os
-import pwd
 import signal
 import sys
 import time
@@ -684,7 +681,7 @@ def _send_email_with_attach_instructions(arg, mailto, originalpid):
     import traceback
     # Prepare variables we'll use in the email.
     d = dict()
-    user = pwd.getpwuid(os.geteuid()).pw_name
+    user = getpass.getuser()
     argv = ' '.join(sys.argv)
     d.update(
         argv       =argv                  ,
