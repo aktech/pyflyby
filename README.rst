@@ -125,8 +125,6 @@ For example:
    --- /tmp/foo.py
    +++ /tmp/foo.py
    @@ -1 +1,9 @@
-   +from __future__ import absolute_import, division, with_statement
-   +
    +from   numpy                    import arange
    +from   scipy.stats              import chisqprob
    +import re

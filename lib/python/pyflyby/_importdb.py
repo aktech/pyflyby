@@ -392,7 +392,6 @@ class ImportDB(object):
             import foo
           <BLANKLINE>
             __mandatory_imports__ = [
-              'from __future__ import division',
               'from aa.bb import cc as dd',
             ]
           <BLANKLINE>

@@ -1,6 +1,4 @@
 
-from __future__ import print_function
-
 from   pyflyby._imports2s       import (SourceToSourceFileImportsTransformation,
                                         SourceToSourceImportBlockTransformation,
                                         fix_unused_and_missing_imports,

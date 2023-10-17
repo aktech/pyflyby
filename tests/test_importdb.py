@@ -38,7 +38,6 @@ def test_ImportDB_from_code_complex_1():
         "from xx import yyy, yyyy"
         ])
     assert result.mandatory_imports == ImportSet([
-        "from __future__ import division",
         "from aa.bb import cc as dd"])
     assert result.forget_imports == ImportSet([
         "from xx import yy",

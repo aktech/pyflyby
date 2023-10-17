@@ -409,7 +409,6 @@ def test_py_file_1():
 
 def test_tidy_imports_query_no_change_1():
     input = dedent('''
-        from __future__ import absolute_import, division
         import x1
 
         x1
@@ -430,7 +429,6 @@ def test_tidy_imports_query_no_change_1():
 
 def test_tidy_imports_query_y_1():
     input = dedent('''
-        from __future__ import absolute_import, division
         import x1, x2
         x1
     ''')
@@ -447,7 +445,6 @@ def test_tidy_imports_query_y_1():
     proc_output = child.logfile.getvalue()
     assert b"[y/N] y" in proc_output
     expected = dedent("""
-        from __future__ import absolute_import, division
         import x1
 
         x1
@@ -457,7 +454,6 @@ def test_tidy_imports_query_y_1():
 
 def test_tidy_imports_query_n_1():
     input = dedent('''
-        from __future__ import absolute_import, division
         import x1, x2
         x1
     ''')
@@ -478,7 +474,6 @@ def test_tidy_imports_query_n_1():
 
 def test_tidy_imports_query_junk_1():
     input = dedent('''
-        from __future__ import absolute_import, division
         import x1, x2
         x1
     ''')

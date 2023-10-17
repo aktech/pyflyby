@@ -188,7 +188,6 @@ def test_find_missing_imports_ast_1():
 
 def test_find_missing_imports_print_function_1():
     node = ast.parse(
-        "from __future__ import print_function\n"
         "print (42, file=sys.stdout)\n"
     )
     result   = find_missing_imports(node, [{}])
@@ -199,7 +198,6 @@ def test_find_missing_imports_print_function_1():
 
 def test_find_missing_imports_assignment_1():
     code = dedent("""
-        from __future__ import print_function
 
         def f():
             x = 1
@@ -1645,7 +1643,6 @@ def test_all_exports_1():
 
 def test_all_exports_2():
     code = dedent("""
-        from __future__ import absolute_import, division
 
         __all__ = ["defaultdict", "rmdir"]
 

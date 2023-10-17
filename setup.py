@@ -99,7 +99,6 @@ class CollectImports(Command):
                 # To regenerate this file, run: setup.py collect_imports
 
                 __mandatory_imports__ = [
-                    'from __future__ import print_function',
                 ]
             """).lstrip(), file=f)
             f.flush()

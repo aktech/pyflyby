@@ -195,8 +195,6 @@ class CompilerFlags(int):
 
     def __interactive_display__(self):
         s = repr(self)
-        if self != 0:
-            s += " # from __future__ import " + ", ".join(self.names)
         return s
 
 

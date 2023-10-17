@@ -239,14 +239,12 @@ class ImportSet(object):
 
           >>> importset = ImportSet('''
           ...     import a, b as B, c, d.dd as DD
-          ...     from __future__ import division
           ...     from _hello import there
           ...     from _hello import *
           ...     from _hello import world
           ... ''')
 
           >>> for s in importset.get_statements(): print(s)
-          from __future__ import division
           import a
           import b as B
           import c

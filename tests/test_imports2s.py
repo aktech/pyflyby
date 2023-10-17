@@ -111,12 +111,10 @@ def test_fix_unused_and_missing_imports_1():
     ''').lstrip(), filename="/foo/test_fix_unused_and_missing_imports_1.py")
     db = ImportDB("""
         import numpy as np
-        __mandatory_imports__ = ["from __future__ import division"]
+        __mandatory_imports__ = []
     """)
     output = fix_unused_and_missing_imports(input, db=db)
     expected = PythonBlock(dedent('''
-        from __future__ import division
-
         import numpy as np
         from foo import m2, m4
         m2, m4, np.foo
@@ -715,7 +713,6 @@ def test_fix_unused_and_missing_continutation_1():
 
 def test_fix_unused_import_future_is_not_unused_1():
     input = PythonBlock(dedent(r'''
-        from __future__ import division
     ''').lstrip())
     db = ImportDB("")
     output = fix_unused_and_missing_imports(input, db=db)
@@ -724,17 +721,14 @@ def test_fix_unused_import_future_is_not_unused_1():
 
 def test_fix_unused_and_missing_print_function_1():
     input = PythonBlock(dedent(r'''
-        from __future__ import print_function
         from m1 import print, m1a
         from m2.print import m2a, m2b
         m1a, m2a, m3a
     ''').lstrip())
     db = ImportDB(
-        "from __future__ import print_function\n"
         "from print.m3 import m3a, m3b")
     output = fix_unused_and_missing_imports(input, db=db)
     expected = PythonBlock(dedent(r'''
-        from __future__ import print_function
         from m1       import m1a
         from m2.print import m2a
         from print.m3 import m3a
@@ -936,14 +930,11 @@ def test_empty_file_mandatory_1():
 
 def test_future_flags_1():
     input = PythonBlock(dedent('''
-        from __future__ import print_function
-
         print("", file=sys.stdout)
     ''').lstrip())
     db = ImportDB("import os, sys")
     output = fix_unused_and_missing_imports(input, db=db)
     expected = PythonBlock(dedent('''
-        from __future__ import print_function
         import sys
 
         print("", file=sys.stdout)
